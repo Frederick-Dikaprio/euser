@@ -1,0 +1,38 @@
+version: "3.6"
+services:
+  e-user.dev:
+    image: "djed/develop.e-user:${TAG}"
+    hostname: "dev.e-user.languelite.com"
+    restart: unless-stopped
+    volumes:
+      - dev_euser_storage:/www/html/e-user/storage
+      - /www/html/e-user/develop/nginx/default:/etc/nginx/sites-available/default
+    ports:
+      - "7010-7011:80"
+    expose:
+      - "80"
+
+  filebeat.e-user.dev:
+    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
+    container_name: filebeat.e-user.dev
+    # Need to override user so we can access the log files, and docker.sock
+    user: root
+    extra_hosts:
+      - "elasticsearch.languelite.com:174.112.117.48"
+    environment:
+      path.config: "/usr/share/filebeat"
+      TZ: "Europe/London"
+    volumes:
+      - ./filebeat/filebeat.docker.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./filebeat/data:/usr/share/filebeat/data
+      - dev_euser_storage:/www/html/e-user/storage
+
+networks:
+  default:
+    external: true
+    name: languelite
+
+volumes:
+  dev_euser_storage:
+    driver: local

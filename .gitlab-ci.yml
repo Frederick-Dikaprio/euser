@@ -1,0 +1,69 @@
+image: lorisleiva/laravel-docker:7.4
+
+stages:
+  - build
+  - test
+  - deploy
+
+packages:
+  stage: build
+  tags:
+    - staging
+  script:
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+    - cp .env.example .env
+    - php artisan key:generate
+    - npm install
+    - npm run production
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-composer
+    paths:
+      - vendor/
+      - node_modules/
+  artifacts:
+    name: e-user.languelite.com
+    expire_in: 2 days
+    paths:
+      - ./
+    exclude:
+      - .git
+      - .git/**/*
+      - .env
+
+codestyle:
+  stage: test
+  tags:
+    - staging
+  dependencies: []
+  script:
+    - phpcs --standard=PSR2 --extensions=php --ignore=app/Support/helpers.php app
+
+.init_ssh: &init_ssh |
+  mkdir -p ~/.ssh
+  chmod 700 ~/.ssh
+  touch ~/.ssh/id_ed25519
+  echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
+  chmod 600 ~/.ssh/id_ed25519
+  [[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  eval $(ssh-agent -s)
+  ssh-add ~/.ssh/id_ed25519
+
+develop:
+  stage: deploy
+  tags:
+    - staging
+  needs:
+    - job: packages
+      artifacts: true
+  script:
+    - *init_ssh
+    - mkdir -p /builds/djed/tmp
+    - tar --exclude='.git' -zcf /builds/djed/tmp/e-user.languelite.com.tar.gz .
+    - scp -P 2243 -o StrictHostKeyChecking=no -r /builds/djed/tmp/e-user.languelite.com.tar.gz deployer@67.43.226.230:/www/html/e-user/develop/tmp
+    - rm -rf /builds/djed/tmp
+    - vendor/bin/envoy run deploy -vvv --branch=develop --machine=dev --service=e-user.dev
+  environment:
+    name: development
+    url: "http://e-user.languelite.com:8080"
+  only:
+    - develop

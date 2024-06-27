@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#dashboard tbody td {
+    position: relative;
+}
+
+#dashboard tbody tr:nth-of-type(odd) {
+    background-color: white;
+}
+
+#dashboard .pagination {
+    display: flex;
+    margin: 2.5em auto 0;
+    justify-content: center;
+    list-style: none;
+    outline: none;
+}
+
+#dashboard .pagination > li > a {
+    border-width: 1px;
+    padding: 5px 10px;
+    outline: none;
+    cursor: pointer;
+    display: inline-block;
+    text-decoration: none;
+    background-color: white;
+    @apply border-indigo-700;
+}
+
+#dashboard .pagination > .active > a {
+    color: white;
+    @apply bg-indigo-700;
+}
+
+#dashboard .pagination > li:not(:last-child) > a {
+    @apply mr-3;
+}
+
+#dashboard .pagination > li > a,
+#dashboard .pagination > li > span {
+    @apply text-indigo-700;
+}
+
+#dashboard .pagination > li > a:hover,
+#dashboard .pagination > li > span:hover,
+#dashboard .pagination > li > a:focus,
+#dashboard .pagination > li > span:focus {
+    color: white !important;
+    @apply border-indigo-800 bg-indigo-800;
+}
+
+#dashboard .pagination > li:first-child > a,
+#dashboard .pagination > li:first-child > span,
+#dashboard .pagination > li:last-child > a,
+#dashboard .pagination > li:last-child > span {
+    border-radius: unset;
+}
+
+#dashboard .modal-button {
+    @apply inline-block rounded-lg bg-indigo-700 px-4 py-2 text-white hover:bg-indigo-800;
+}
